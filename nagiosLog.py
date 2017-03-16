@@ -1,43 +1,57 @@
+
+__author__ = 'SRIDHAR GUDE'
+
+
 import logging
-import time
- 
 from logging.handlers import RotatingFileHandler
-from logging.handlers import TimedRotatingFileHandler
- 
-#----------------------------------------------------------------------
-def create_rotating_log(path):
+
+
+_logger_name = "Nagios"
+_print_format = "%(asctime)s - %(levelname)s - %(message)s"
+_level = logging.DEBUG
+
+class nagiosLog():
     """
-    Creates a rotating log
+    It takes "log_file" as mandatory argument and logs the messages to provided
+    log file. It doesn't output anything on the console.
+
+    You have to use required print statements to post the output to console and
+    Nagios Dashboard,this is due to limitation we have for Nagios since printing
+    everything we log on to file to Nagios dashboard will be clumsy.
+
+    On Nagios dashboard, it's preferred to have a one line statement explaining
+    the state.
+
     """
-    logger = logging.getLogger("Rotating Log")
-    logger.setLevel(logging.INFO)
- 
-    # add a rotating handler
-    handler = RotatingFileHandler(path, maxBytes=20,
-                                  backupCount=5)
-    logger.addHandler(handler)
 
-    for i in range(10):
-        logger.info("This is test log line %s" % i)
-        time.sleep(1.5)
+    def __init__(self,log_file,logger_name=_logger_name,level=_level):
 
+        self.log_file = log_file
+        self.logger_name = logger_name
+        self.level = level
 
-def create_timed_rotating_log(path):
-    """"""
-    logger = logging.getLogger("Rotating Log")
-    logger.setLevel(logging.INFO)
- 
-    handler = TimedRotatingFileHandler(path,
-                                       when="m",
-                                       interval=1,
-                                       backupCount=5)
-    logger.addHandler(handler)
- 
-    for i in range(6):
-        logger.info("This is a test!")
-        time.sleep(75)
- 
-#----------------------------------------------------------------------
-if __name__ == "__main__":
-    log_file = "test.log"
-    create_rotating_log(log_file)
+    def getLog(self):
+
+        """
+        Return the logging object
+
+        """
+        logger = logging.getLogger(self.logger_name)
+        logger.setLevel(self.level)
+        logger.addHandler(self._rotateLog())
+
+        return logger
+
+    def _rotateLog(self):
+
+        """
+        Rotating the log files if it exceed the size.
+        The default size is 20 MB with 2 backupfiles
+        """
+
+        rh = RotatingFileHandler(self.log_file,
+                                 maxBytes=20*1024*1024, backupCount=2)
+        formatter = logging.Formatter(_print_format)
+        rh.setFormatter(formatter)
+        return rh
+
